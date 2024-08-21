@@ -1,0 +1,7 @@
+Back-end project to a boardgame store.
+
+Deploy: 
+
+.env:
+PORT = 
+DATABASE_URL =
