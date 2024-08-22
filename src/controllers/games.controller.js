@@ -1,4 +1,3 @@
-import { db } from "../database/database.js"
 import { createGameService, getGamesService } from "../services/games.services.js";
 
 export async function getGames(req, res) {

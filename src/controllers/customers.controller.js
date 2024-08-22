@@ -1,4 +1,3 @@
-import { db } from "../database/database.js";
 import { createCustomerService, getCustomerService, getCustomerServiceById } from "../services/customers.services.js";
 
 export async function getCustomer(req, res) {

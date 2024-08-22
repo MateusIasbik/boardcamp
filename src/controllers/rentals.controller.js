@@ -1,4 +1,3 @@
-import { db } from "../database/database.js";
 import dayjs from "dayjs";
 import { createRentalService, deleteRentalsService, finshRentalServiceById, getRentalsService } from "../services/rentals.services.js";
 
