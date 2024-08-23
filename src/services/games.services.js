@@ -1,12 +1,12 @@
 import errors from "../errors/errors.js";
 import gamesRepository from "../repositories/games.repositories.js";
 
-export async function getGames() {
+async function getGames() {
     const games = gamesRepository.getGames()
     return games;
 }
 
-export async function createGame({ name, image, stockTotal, pricePerDay }) {
+async function createGame({ name, image, stockTotal, pricePerDay }) {
 
     const existingGame = await gamesRepository.getGameByName(name);
     if (existingGame.rows.length > 0) throw errors.conflictError("jogo");

@@ -1,16 +1,16 @@
 import customersService from "../services/customers.services.js";
 
-export async function getCustomer(req, res) {
+async function getCustomer(req, res) {
     const resultado = await customersService.getCustomer();
     res.status(200).send(resultado);
 }
 
-export async function getCustomerById(req, res) {
+async function getCustomerById(req, res) {
     const result = await customersService.getCustomerById(req.params);
     res.status(200).send(result);
 }
 
-export async function createCustomer(req, res) {
+async function createCustomer(req, res) {
     const { name, phone, cpf } = req.body;
 
     const resultado = await customersService.createCustomer(name, phone, cpf)

@@ -15,7 +15,6 @@ export async function createRental({ customerId, gameId, daysRented }) {
     // Verifica se o jogo existe
     const gameResult = await rentalsRepository.gameExist(gameId);
     if (gameResult.rows.length === 0) throw errors.invalidError("Jogo");
-
     const game = gameResult.rows[0];
 
     // Verifica se o jogo está disponível (estoque)
@@ -43,14 +42,13 @@ export async function finshRentalById({ id }) {
     // Verifica se o aluguel já está finalizado
     if (rental.returnDate !== null) throw errors.rentNotFinalizedError();
 
-    const returnDate = dayjs().format("YYYY-MM-DD");
+    const returnDate = dayjs(dayjs().format("YYYY-MM-DD"));
     const rentDate = dayjs(rental.rentDate);
-    const daysRented = rental.daysRented;
 
     // Calcula dias de atraso
-    const expectedReturnDate = rentDate.add(daysRented, 'day');
-    const delayDays = dayjs(returnDate).diff(expectedReturnDate, 'day');
-    const delayFee = delayDays > 0 ? delayDays * rental.originalPrice / daysRented : 0;
+    const expectedReturnDate = rentDate.add(rental.daysRented, 'day');
+    const delayDays = returnDate.diff(expectedReturnDate, 'day'); 
+    const delayFee = delayDays > 0 ? delayDays * rental.originalPrice : 0;
 
     // Atualiza o aluguel com returnDate e delayFee
     await rentalsRepository.updateRental(returnDate, delayFee, id);

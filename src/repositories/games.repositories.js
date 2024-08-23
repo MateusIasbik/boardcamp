@@ -11,12 +11,12 @@ async function getGameByName(name) {
 }
 
 async function createGame(name, image, stockTotal, pricePerDay) {
-    const resultado = await db.query(`
+    const result = await db.query(`
         INSERT INTO games (name, image, "stockTotal", "pricePerDay")
         VALUES ($1, $2, $3, $4) RETURNING id;
         `, [name, image, stockTotal, pricePerDay])
 
-    const idGame = resultado.rows[0].id;
+    const idGame = result.rows[0].id;
 
     return {
         id: idGame,
