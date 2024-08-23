@@ -1,28 +1,20 @@
 import dayjs from "dayjs";
-import { db } from "../database/database.js";
+import rentalsRepository from "../repositories/rentals.repositories.js";
 
-export async function getRentalsService() {
-    const result = await db.query(`SELECT 
-        rentals.*,
-        customers.id AS "customerId", customers.name AS "customerName",
-        games.id AS "gameId", games.name AS "gameName"
-         FROM rentals
-         JOIN customers ON rentals."customerId" = customers.id
-         JOIN games ON rentals."gameId" = games.id;
-         `)
-
+export async function getRentals() {
+    const result = await rentalsRepository.getRentals();
     return result;
 }
 
-export async function createRentalService({ customerId, gameId, daysRented }) {
+export async function createRental({ customerId, gameId, daysRented }) {
     // Verifica se o cliente existe
-    const customerResult = await db.query(`SELECT * FROM customers WHERE id=$1;`, [customerId]);
+    const customerResult = await rentalsRepository.customerExist(customerId);
     if (customerResult.rows.length === 0) {
         return null;
     }
 
     // Verifica se o jogo existe
-    const gameResult = await db.query(`SELECT * FROM games WHERE id=$1;`, [gameId]);
+    const gameResult = await rentalsRepository.gameExist(gameId);
     if (gameResult.rows.length === 0) {
         return null;
     }
@@ -30,9 +22,7 @@ export async function createRentalService({ customerId, gameId, daysRented }) {
     const game = gameResult.rows[0];
 
     // Verifica se o jogo está disponível (estoque)
-    const rentalsResult = await db.query(`
-        SELECT COUNT(*) FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NULL;
-    `, [gameId]);
+    const rentalsResult = await rentalsRepository.gameAvailable(gameId);
 
     const rentalsCount = parseInt(rentalsResult.rows[0].count);
     if (rentalsCount >= game.stockTotal) {
@@ -44,16 +34,13 @@ export async function createRentalService({ customerId, gameId, daysRented }) {
     const originalPrice = daysRented * game.pricePerDay;
 
     // Insere o novo aluguel
-    const resultado = await db.query(`
-        INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice", "returnDate", "delayFee")
-        VALUES ($1, $2, $3, $4, $5, $6, $7);
-    `, [customerId, gameId, rentDate, daysRented, originalPrice, null, null]);
+    await rentalsRepository.createRental(customerId, gameId, rentDate, daysRented, originalPrice);
 
 }
 
-export async function finshRentalServiceById({ id }) {
+export async function finshRentalById({ id }) {
     // Verifica se o aluguel existe
-    const rentalResult = await db.query(`SELECT * FROM rentals WHERE id=$1;`, [id]);
+    const rentalResult = await rentalsRepository.finishRental(id);
     if (rentalResult.rows.length === 0) {
         return null;
     }
@@ -75,15 +62,11 @@ export async function finshRentalServiceById({ id }) {
     const delayFee = delayDays > 0 ? delayDays * rental.originalPrice / daysRented : 0;
 
     // Atualiza o aluguel com returnDate e delayFee
-    await db.query(`
-        UPDATE rentals 
-        SET "returnDate"=$1, "delayFee"=$2 
-        WHERE id=$3;
-    `, [returnDate, delayFee, id]);
+    await rentalsRepository.updateRental(returnDate, delayFee, id);
 }
 
-export async function deleteRentalsService({ id }) {
-    const rentalResult = await db.query(`SELECT * FROM rentals WHERE id=$1;`, [id]);
+export async function deleteRentals({ id }) {
+    const rentalResult = await rentalsRepository.getRentalsById(id);
     if (rentalResult.rows.length === 0) {
         return null;
     }
@@ -96,5 +79,14 @@ export async function deleteRentalsService({ id }) {
     }
 
     // Apaga o aluguel
-    await db.query(`DELETE FROM rentals WHERE id=$1;`, [id]);
+    await rentalsRepository.deleteRental(id);
 }
+
+const rentalsService = {
+    getRentals,
+    createRental,
+    finshRentalById,
+    deleteRentals
+}
+
+export default rentalsService;

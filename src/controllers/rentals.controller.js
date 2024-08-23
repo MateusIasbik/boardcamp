@@ -1,10 +1,9 @@
 import dayjs from "dayjs";
-import { createRentalService, deleteRentalsService, finshRentalServiceById, getRentalsService } from "../services/rentals.services.js";
-
+import rentalsService from "../services/rentals.services.js";
 
 export async function getRentals(req, res) {
     try {
-        const result = await getRentalsService();
+        const result = await rentalsService.getRentals();
 
         const rentals = result.rows.map(row => {
             return {
@@ -36,7 +35,8 @@ export async function getRentals(req, res) {
 export async function createRental(req, res) {
     try {
         
-        const result = await createRentalService(req.body);
+
+        const result = await rentalsService.createRental(req.body);
 
         if (result === null) {
             return res.status(400).send("Ocorreu um erro ao criar o aluguel. Verifique os dados fornecidos.");
@@ -52,7 +52,7 @@ export async function createRental(req, res) {
 export async function finshRentalById(req, res) {
 
     try {
-        const result = await finshRentalServiceById(req.params);
+        const result = await rentalsService.finshRentalById(req.params);
 
         if (result === null) {
             return res.status(400).send("Não é possível finalizar um aluguel inexistente ou já finalizado.");
@@ -69,7 +69,7 @@ export async function finshRentalById(req, res) {
 export async function deleteRentals(req, res) {
 
     try {
-        const result = await deleteRentalsService(req.params);
+        const result = await rentalsService.deleteRentals(req.params);
 
         if (result === null) {
             return res.status(400).send("Não é possível deletar um aluguel não finalizado ou inexistente.");
@@ -81,3 +81,12 @@ export async function deleteRentals(req, res) {
         res.status(500).send(err.message);
     }
 }
+
+const rentalsController = {
+    getRentals,
+    createRental,
+    finshRentalById,
+    deleteRentals
+}
+
+export default rentalsController;

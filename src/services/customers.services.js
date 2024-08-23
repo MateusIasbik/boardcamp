@@ -1,13 +1,13 @@
-import { db } from "../database/database.js";
+import customersRepository from "../repositories/customers.repositories.js";
 
-export async function getCustomerService() {
-    const customers = await db.query(`SELECT * FROM customers;`)
-    return customers.rows;
+export async function getCustomer() {
+    const customers = await customersRepository.getCustomer();
+    return customers;
 }
 
-export async function getCustomerServiceById({ id }) {
+export async function getCustomerById({ id }) {
 
-    const customer = await db.query(`SELECT * FROM customers WHERE id=$1;`, [id])
+    const customer = await customersRepository.getCustomerById(id);
 
     // Verifica se o cliente existe
     if (customer.rows.length === 0) {
@@ -17,23 +17,20 @@ export async function getCustomerServiceById({ id }) {
     return customer.rows[0];
 }
 
-export async function createCustomerService(name, phone, cpf) {
-    const existingCustomer = await db.query(`SELECT * FROM customers WHERE cpf=$1;`, [cpf]);
+export async function createCustomer(name, phone, cpf) {
+    const existingCustomer = await customersRepository.getCustomerByCpf(cpf);
     if (existingCustomer.rows.length > 0) {
         return null;
     }
 
-    const resultado = await db.query(`
-            INSERT INTO customers (name, phone, cpf)
-            VALUES ($1, $2, $3) RETURNING id;
-            `, [name, phone, cpf])
-
-        const idCustomer = resultado.rows[0].id;
-
-        return {
-            id: idCustomer,
-            name,
-            phone,
-            cpf
-        }
+    const result = await customersRepository.createCustomer(name, phone, cpf);
+    return result;
 }
+
+const customersService = {
+    getCustomer,
+    getCustomerById,
+    createCustomer
+}
+
+export default customersService;
