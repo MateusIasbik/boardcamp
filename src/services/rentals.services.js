@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import rentalsRepository from "../repositories/rentals.repositories.js";
+import errors from "../errors/errors.js";
 
 export async function getRentals() {
     const result = await rentalsRepository.getRentals();
@@ -9,15 +10,11 @@ export async function getRentals() {
 export async function createRental({ customerId, gameId, daysRented }) {
     // Verifica se o cliente existe
     const customerResult = await rentalsRepository.customerExist(customerId);
-    if (customerResult.rows.length === 0) {
-        return null;
-    }
+    if (customerResult.rows.length === 0) throw errors.invalidError("Cliente");
 
     // Verifica se o jogo existe
     const gameResult = await rentalsRepository.gameExist(gameId);
-    if (gameResult.rows.length === 0) {
-        return null;
-    }
+    if (gameResult.rows.length === 0) throw errors.invalidError("Jogo");
 
     const game = gameResult.rows[0];
 
@@ -25,9 +22,7 @@ export async function createRental({ customerId, gameId, daysRented }) {
     const rentalsResult = await rentalsRepository.gameAvailable(gameId);
 
     const rentalsCount = parseInt(rentalsResult.rows[0].count);
-    if (rentalsCount >= game.stockTotal) {
-        return null;
-    }
+    if (rentalsCount >= game.stockTotal) throw errors.invalidStockError();
 
     // Calcula o preço total do aluguel
     const rentDate = dayjs().format("YYYY-MM-DD");
@@ -41,16 +36,12 @@ export async function createRental({ customerId, gameId, daysRented }) {
 export async function finshRentalById({ id }) {
     // Verifica se o aluguel existe
     const rentalResult = await rentalsRepository.finishRental(id);
-    if (rentalResult.rows.length === 0) {
-        return null;
-    }
+    if (rentalResult.rows.length === 0) throw errors.invalidError("Aluguel");
 
     const rental = rentalResult.rows[0];
 
     // Verifica se o aluguel já está finalizado
-    if (rental.returnDate !== null) {
-        return null;
-    }
+    if (rental.returnDate !== null) throw errors.rentNotFinalizedError();
 
     const returnDate = dayjs().format("YYYY-MM-DD");
     const rentDate = dayjs(rental.rentDate);
@@ -67,16 +58,12 @@ export async function finshRentalById({ id }) {
 
 export async function deleteRentals({ id }) {
     const rentalResult = await rentalsRepository.getRentalsById(id);
-    if (rentalResult.rows.length === 0) {
-        return null;
-    }
+    if (rentalResult.rows.length === 0) throw errors.invalidError("Aluguel");
 
     const rental = rentalResult.rows[0];
 
     // Verifica se o aluguel já está finalizado
-    if (rental.returnDate === null) {
-        return null;
-    }
+    if (rental.returnDate === null) throw errors.rentNotFinalizedError();
 
     // Apaga o aluguel
     await rentalsRepository.deleteRental(id);

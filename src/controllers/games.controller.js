@@ -11,14 +11,14 @@ export async function getGames(req, res) {
 
 export async function createGame(req, res) {
     try {
-        const resultado = await gamesService.createGame(req.body)
+        const result = await gamesService.createGame(req.body)
+        res.status(201).send(result);
+    } catch (err) {
 
-        if (resultado === null) {
-            return res.status(400).send("Ocorreu um erro")
+        if (err === "conflict") {
+            return res.status(409).send(err.message);
         }
 
-        res.status(201).send(resultado);
-    } catch (err) {
         res.status(500).send(err.message)
     }
 }

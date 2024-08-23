@@ -1,3 +1,4 @@
+import errors from "../errors/errors.js";
 import gamesRepository from "../repositories/games.repositories.js";
 
 export async function getGames() {
@@ -8,9 +9,7 @@ export async function getGames() {
 export async function createGame({ name, image, stockTotal, pricePerDay }) {
 
     const existingGame = await gamesRepository.getGameByName(name);
-    if (existingGame.rows.length > 0) {
-        return `Um jogo com nome ${name} já existe`;
-    }
+    if (existingGame.rows.length > 0) throw errors.conflictError("jogo");
 
     const result = await gamesRepository.createGame(name, image, stockTotal, pricePerDay);
     return result;

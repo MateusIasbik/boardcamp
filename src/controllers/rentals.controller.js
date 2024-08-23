@@ -1,83 +1,96 @@
 import dayjs from "dayjs";
 import rentalsService from "../services/rentals.services.js";
 
-export async function getRentals(req, res) {
+async function getRentals(req, res) {
     try {
-        const result = await rentalsService.getRentals();
+    const result = await rentalsService.getRentals();
 
-        const rentals = result.rows.map(row => {
-            return {
-                id: row.id,
-                customerId: row.customerId,
-                gameId: row.gameId,
-                rentDate: dayjs(row.rentDate).format("YYYY-MM-DD"),
-                daysRented: row.daysRented,
-                returnDate: row.returnDate,
-                originalPrice: row.originalPrice,
-                delayFee: row.delayFee,
-                customer: {
-                    id: row.customerId,
-                    name: row.customerName
-                },
-                game: {
-                    id: row.gameId,
-                    name: row.gameName
-                }
+    const rentals = result.rows.map(row => {
+        return {
+            id: row.id,
+            customerId: row.customerId,
+            gameId: row.gameId,
+            rentDate: dayjs(row.rentDate).format("YYYY-MM-DD"),
+            daysRented: row.daysRented,
+            returnDate: row.returnDate,
+            originalPrice: row.originalPrice,
+            delayFee: row.delayFee,
+            customer: {
+                id: row.customerId,
+                name: row.customerName
+            },
+            game: {
+                id: row.gameId,
+                name: row.gameName
             }
-        })
+        }
+    })
 
-        res.status(200).send(rentals)
+    res.status(200).send(rentals)
     } catch (err) {
         res.status(500).send(err.message)
     }
 }
 
-export async function createRental(req, res) {
+async function createRental(req, res) {
     try {
-        
-
         const result = await rentalsService.createRental(req.body);
-
-        if (result === null) {
-            return res.status(400).send("Ocorreu um erro ao criar o aluguel. Verifique os dados fornecidos.");
-        }
-
-        res.sendStatus(201);
+        res.status(201).send(result);
 
     } catch (err) {
+
+        if (err.type === "invalidId") {
+            return res.status(404).send(err.message);
+        }
+
+        if (err.type === "invalidId") {
+            return res.status(404).send(err.message);
+        }
+
+        if (err.type === "invalidStock") {
+            return res.status(422).send(err.message);
+        }
+
         res.status(500).send(err.message);
     }
 }
 
-export async function finshRentalById(req, res) {
+async function finshRentalById(req, res) {
 
     try {
         const result = await rentalsService.finshRentalById(req.params);
-
-        if (result === null) {
-            return res.status(400).send("Não é possível finalizar um aluguel inexistente ou já finalizado.");
-        }
-
-
-        res.sendStatus(200);
+        res.status(200).send(result);
 
     } catch (err) {
+
+        if (err === "invalidId") {
+            return res.status(404).send(err.message);
+        }
+
+        if (err === "RentNotFinalized") {
+            return res.status(422).send(err.message);
+        }
+
         res.status(500).send(err.message);
     }
 }
 
-export async function deleteRentals(req, res) {
+async function deleteRentals(req, res) {
 
     try {
         const result = await rentalsService.deleteRentals(req.params);
-
-        if (result === null) {
-            return res.status(400).send("Não é possível deletar um aluguel não finalizado ou inexistente.");
-        }      
-
-        res.sendStatus(200);
+        res.status(200).send(result);
 
     } catch (err) {
+
+        if (err === "invalidId") {
+            return res.status(404).send(err.message);
+        }
+
+        if (err === "RentNotFinalized") {
+            return res.status(400).send(err.message);
+        }
+
         res.status(500).send(err.message);
     }
 }

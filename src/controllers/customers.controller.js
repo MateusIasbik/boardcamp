@@ -11,10 +11,14 @@ export async function getCustomer(req, res) {
 
 export async function getCustomerById(req, res) {
     try {
-        const resultado = await customersService.getCustomerById(req.params);
-
-        res.status(200).send(resultado);
+        const result = await customersService.getCustomerById(req.params);
+        res.status(200).send(result);
     } catch (err) {
+
+        if (err === "invalidId") {
+            return res.status(404).send(err.message);
+        }
+
         res.status(500).send(err.message)
     }
 }
@@ -22,11 +26,14 @@ export async function getCustomerById(req, res) {
 export async function createCustomer(req, res) {
     const { name, phone, cpf } = req.body;
     try {
-
-        // Verifica se já existe um cliente com o mesmo CPF
         const resultado = await customersService.createCustomer(name, phone, cpf)
         res.status(201).send(resultado);
     } catch (err) {
+
+        if (err === "conflict") {
+            return res.status(409).send(err.message);
+        }
+
         res.status(500).send(err.message)
     }
 }
